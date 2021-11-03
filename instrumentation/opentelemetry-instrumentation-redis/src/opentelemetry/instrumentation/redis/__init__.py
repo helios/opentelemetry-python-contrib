@@ -167,9 +167,7 @@ def _instrument(
         "redis", f"{redis_class}.execute_command", _traced_execute_command
     )
     wrap_function_wrapper(
-        "redis.client",
-        f"{pipeline_class}.execute",
-        _traced_execute_pipeline,
+        "redis.client", f"{pipeline_class}.execute", _traced_execute_pipeline,
     )
     wrap_function_wrapper(
         "redis.client",

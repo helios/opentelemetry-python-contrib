@@ -194,9 +194,7 @@ def _instrument(
         tracer = get_tracer(__name__, __version__, tracer_provider)
 
         with tracer.start_as_current_span(
-            name=orig_handler_name,
-            context=parent_context,
-            kind=span_kind,
+            name=orig_handler_name, context=parent_context, kind=span_kind,
         ) as span:
             if span.is_recording():
                 lambda_context = args[1]

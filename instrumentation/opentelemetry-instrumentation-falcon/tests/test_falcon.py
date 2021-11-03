@@ -88,8 +88,7 @@ class TestFalconInstrumentation(TestFalconBase, WsgiTestBase):
         self.assertEqual(span.name, f"HelloWorldResource.on_{method.lower()}")
         self.assertEqual(span.status.status_code, StatusCode.UNSET)
         self.assertEqual(
-            span.status.description,
-            None,
+            span.status.description, None,
         )
         self.assertSpanHasAttributes(
             span,

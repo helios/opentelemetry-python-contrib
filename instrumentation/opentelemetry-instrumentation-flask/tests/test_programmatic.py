@@ -157,8 +157,7 @@ class TestProgrammatic(InstrumentationTest, TestBase, WsgiTestBase):
         self.assertEqual(len(span_list), 1)
 
         self.assertTraceResponseHeaderMatchesSpan(
-            response.headers,
-            span_list[0],
+            response.headers, span_list[0],
         )
 
         set_global_response_propagator(orig)
