@@ -16,6 +16,7 @@ import collections
 
 import grpc
 import pytest
+from re import compile
 
 from opentelemetry.instrumentation.grpc import filters
 
@@ -53,7 +54,7 @@ class _StreamClientInfo(
     [
         (
             True,
-            "SimpleMethod",
+            "thh,Method",
             _HandlerCallDetails(
                 method="SimpleMethod",
                 invocation_metadata=[("tracer", "foo"), ("caller", "bar")],
@@ -83,7 +84,7 @@ class _StreamClientInfo(
         ),
         (
             False,
-            "SimpleMethod",
+            "SimpleMethoddd",
             grpc.aio.ClientCallDetails(
                 method="NotSimpleMethod",
                 timeout=3000,
@@ -93,23 +94,15 @@ class _StreamClientInfo(
             ),
         ),
         (
-            False,
-            "SimpleMethod",
-            _HandlerCallDetails(
-                method="NotSimpleMethod",
-                invocation_metadata=[("tracer", "foo"), ("caller", "bar")],
-            ),
-        ),
-        (
             True,
-            "SimpleMethod",
+            "TestServer",
             _UnaryClientInfo(
                 full_method="/GRPCTestServer/SimpleMethod",
                 timeout=3000,
             ),
         ),
         (
-            False,
+            True,
             "SimpleMethod",
             _UnaryClientInfo(
                 full_method="/GRPCTestServer/NotSimpleMethod",
@@ -118,17 +111,17 @@ class _StreamClientInfo(
         ),
         (
             True,
-            "SimpleMethod",
+            "Health",
             _StreamClientInfo(
-                full_method="/GRPCTestServer/SimpleMethod",
+                full_method="/GRPCTestServer/Health",
                 is_client_stream=True,
                 is_server_stream=False,
                 timeout=3000,
             ),
         ),
         (
-            False,
-            "SimpleMethod",
+            True,
+            ".*Method.*",
             _StreamClientInfo(
                 full_method="/GRPCTestServer/NotSimpleMethod",
                 is_client_stream=True,
@@ -139,7 +132,9 @@ class _StreamClientInfo(
     ],
 )
 def test_method_name(test_case):
-    fn = filters.method_name(test_case[1])
+    excluded_methods = test_case[1].split(',')
+    regex_pattern = compile("|".join(excluded_methods))
+    fn = filters.full_method_regex(regex_pattern)
     assert test_case[0] == fn(test_case[2])
 
 

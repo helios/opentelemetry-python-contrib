@@ -14,6 +14,7 @@
 
 import os
 from typing import Callable, TypeVar
+from re import Pattern, search
 
 import grpc
 
@@ -204,6 +205,24 @@ def service_prefix(prefix: str) -> Condition[TCallDetails]:
     def filter_fn(metadata):
         service, _ = _split_full_method(metadata)
         return service.startswith(prefix)
+
+    return filter_fn
+
+def full_method_regex(regex: Pattern) -> Condition[TCallDetails]:
+    """Returns a filter function that return True if
+    request's gRPC method name matches the given regex pattern.
+
+    Args:
+        regex (Pattern): method regex to match
+
+    Returns:
+        A filter function that returns True if request's gRPC method
+        name matches a regex
+    """
+
+    def filter_fn(metadata):
+        method = _full_method(metadata)
+        return bool(search(regex, method))
 
     return filter_fn
 
