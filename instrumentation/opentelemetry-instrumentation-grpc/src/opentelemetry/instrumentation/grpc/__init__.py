@@ -324,11 +324,15 @@ class GrpcInstrumentorServer(BaseInstrumentor):
             else:
                 filter_ = any_of(filter_, excluded_service_filter)
         self._filter = filter_
+        self._request_hook = None
+        self._response_hook = None
 
     def instrumentation_dependencies(self) -> Collection[str]:
         return _instruments
 
     def _instrument(self, **kwargs):
+        self._request_hook = kwargs.get("request_hook")
+        self._response_hook = kwargs.get("response_hook")
         self._original_func = grpc.server
         tracer_provider = kwargs.get("tracer_provider")
 
@@ -338,13 +342,19 @@ class GrpcInstrumentorServer(BaseInstrumentor):
                 kwargs["interceptors"].insert(
                     0,
                     server_interceptor(
-                        tracer_provider=tracer_provider, filter_=self._filter
+                        tracer_provider=tracer_provider,
+                        filter_=self._filter,
+                        request_hook=self._request_hook,
+                        response_hook=self._response_hook,
                     ),
                 )
             else:
                 kwargs["interceptors"] = [
                     server_interceptor(
-                        tracer_provider=tracer_provider, filter_=self._filter
+                        tracer_provider=tracer_provider,
+                        filter_=self._filter,
+                        request_hook=self._request_hook,
+                        response_hook=self._response_hook,
                     )
                 ]
             return self._original_func(*args, **kwargs)
@@ -376,11 +386,15 @@ class GrpcAioInstrumentorServer(BaseInstrumentor):
             else:
                 filter_ = any_of(filter_, excluded_service_filter)
         self._filter = filter_
+        self._request_hook = None
+        self._response_hook = None
 
     def instrumentation_dependencies(self) -> Collection[str]:
         return _instruments
 
     def _instrument(self, **kwargs):
+        self._request_hook = kwargs.get("request_hook")
+        self._response_hook = kwargs.get("response_hook")
         self._original_func = grpc.aio.server
         tracer_provider = kwargs.get("tracer_provider")
 
@@ -390,13 +404,19 @@ class GrpcAioInstrumentorServer(BaseInstrumentor):
                 kwargs["interceptors"].insert(
                     0,
                     aio_server_interceptor(
-                        tracer_provider=tracer_provider, filter_=self._filter
+                        tracer_provider=tracer_provider,
+                        filter_=self._filter,
+                        request_hook=self._request_hook,
+                        response_hook=self._response_hook,
                     ),
                 )
             else:
                 kwargs["interceptors"] = [
                     aio_server_interceptor(
-                        tracer_provider=tracer_provider, filter_=self._filter
+                        tracer_provider=tracer_provider,
+                        filter_=self._filter,
+                        request_hook=self._request_hook,
+                        response_hook=self._response_hook,
                     )
                 ]
             return self._original_func(*args, **kwargs)
@@ -586,7 +606,7 @@ def client_interceptor(
     )
 
 
-def server_interceptor(tracer_provider=None, filter_=None):
+def server_interceptor(tracer_provider=None, filter_=None, request_hook=None, response_hook=None):
     """Create a gRPC server interceptor.
 
     Args:
@@ -603,7 +623,7 @@ def server_interceptor(tracer_provider=None, filter_=None):
 
     tracer = trace.get_tracer(__name__, __version__, tracer_provider)
 
-    return _server.OpenTelemetryServerInterceptor(tracer, filter_=filter_)
+    return _server.OpenTelemetryServerInterceptor(tracer, filter_=filter_, request_hook=request_hook, response_hook=response_hook)
 
 
 def aio_client_interceptors(
@@ -649,7 +669,7 @@ def aio_client_interceptors(
     ]
 
 
-def aio_server_interceptor(tracer_provider=None, filter_=None):
+def aio_server_interceptor(tracer_provider=None, filter_=None, request_hook=None, response_hook=None):
     """Create a gRPC aio server interceptor.
 
     Args:
@@ -663,7 +683,7 @@ def aio_server_interceptor(tracer_provider=None, filter_=None):
     tracer = trace.get_tracer(__name__, __version__, tracer_provider)
 
     return _aio_server.OpenTelemetryAioServerInterceptor(
-        tracer, filter_=filter_
+        tracer, filter_=filter_, request_hook=request_hook, response_hook=response_hook
     )
 
 
