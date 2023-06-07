@@ -49,6 +49,10 @@ class SpanBuilder:
         self._attributes[SpanAttributes.MESSAGING_DESTINATION] = destination
 
     def set_channel(self, channel: AbstractChannel):
+        if channel.__class__.__name__ == "RobustChannel":
+            # Change introduced in v9 of aio-pika
+            channel = channel.channel
+
         connection = channel.connection
         if getattr(connection, "connection", None):
             # aio_rmq 7
